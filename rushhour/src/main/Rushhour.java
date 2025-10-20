@@ -1,5 +1,7 @@
 package main;
 
+import java.util.ArrayList; // Necesario para getSuccessors
+
 public class Rushhour {
 
     /**
@@ -20,6 +22,10 @@ public class Rushhour {
             case "question":
                 handleQuestion(args);
                 break;
+            // --- NUEVO CASO TAREA 2 ---
+            case "successors":
+                handleSuccessors(args);
+                break;
             default:
                 System.out.println("Comando desconocido: " + command);
         }
@@ -27,7 +33,8 @@ public class Rushhour {
 
     /**
      * QUE: Maneja el comando verify que valida un nivel.
-     * POR QUE: Verificar si un nivel es válido antes de jugar, mostrando código de error.
+     * POR QUE: Verificar si un nivel es válido antes de jugar, mostrando código de
+     * error.
      */
     private static void handleVerify(String[] args) {
         if (args.length < 3 || !args[1].equals("-s")) {
@@ -42,17 +49,53 @@ public class Rushhour {
     }
 
     /**
+     * QUE: Maneja el comando 'successors' que genera los siguientes estados.
+     * POR QUE: Requerido por la Tarea 2.
+     */
+    private static void handleSuccessors(String[] args) {
+        if (args.length < 3 || !args[1].equals("-s")) {
+            System.out.println("Uso: java -jar rushhour.jar successors -s <nivel>");
+            return;
+        }
+
+        String level = args[2];
+        Nivel nivel = new Nivel(level);
+
+        int resultado = Nivel.verify_level(Nivel.getArrayLevel());
+        if (resultado != 0) {
+            System.out.println("Error: Nivel no valido (codigo: " + resultado + ")");
+            return;
+        }
+
+        Tablero tablero = Tablero.create_tablero(nivel);
+        if (tablero == null) {
+            System.out.println("Error: No se pudo crear el tablero");
+            return;
+        }
+
+        // Generar y mostrar sucesores
+        ArrayList<Sucesor> sucesores = tablero.getSuccessors();
+        for (Sucesor suc : sucesores) {
+            System.out.println(suc.toString());
+        }
+    }
+
+    /**
      * QUE: Maneja el comando question que consulta información del tablero.
      * POR QUE: Proporcionar una interfaz de consultas sobre el estado del juego.
      */
     private static void handleQuestion(String[] args) {
+        // --- TEXTO DE AYUDA ACTUALIZADO ---
         if (args.length < 4 || !args[1].equals("-s")) {
             System.out.println("Uso: java -jar rushhour.jar question -s <nivel> <opcion> [parametro]");
-            System.out.println("Opciones:");
+            System.out.println("Opciones T1:");
             System.out.println("  --whereis <vehiculo>  : Devuelve la posicion del vehiculo");
             System.out.println("  --howmany             : Devuelve el numero de vehiculos");
             System.out.println("  --size <vehiculo>     : Devuelve el tamaño del vehiculo");
             System.out.println("  --what <fila>,<col>   : Devuelve que vehiculo esta en esa posicion");
+            System.out.println("Opciones T2:");
+            System.out.println("  --goal                : Devuelve TRUE/FALSE si es estado objetivo");
+            System.out.println("  --move <accion1,...>  : Devuelve el estado tras aplicar acciones");
             return;
         }
 
@@ -74,19 +117,16 @@ public class Rushhour {
         String option = args[3];
 
         switch (option) {
+            // --- CASOS T1 (Sin cambios) ---
             case "--whereis":
                 if (args.length < 5) {
                     System.out.println("Error: Falta el parametro <vehiculo>");
                     return;
                 }
-                // --- REFACTORIZADO ---
-                // Llama al método de instancia de tablero
                 System.out.println(tablero.getVehiclePositionsFormatted(args[4].charAt(0)));
                 break;
 
             case "--howmany":
-                // --- REFACTORIZADO ---
-                // Llama al método de instancia de tablero
                 System.out.println(tablero.countVehicles());
                 break;
 
@@ -95,8 +135,6 @@ public class Rushhour {
                     System.out.println("Error: Falta el parametro <vehiculo>");
                     return;
                 }
-                // --- REFACTORIZADO ---
-                // Llama al método de instancia de tablero
                 int size = tablero.getVehicleSize(args[4].charAt(0));
                 if (size == 0) {
                     System.out.println("Vehiculo '" + args[4].charAt(0) + "' no encontrado");
@@ -110,8 +148,31 @@ public class Rushhour {
                     System.out.println("Error: Falta el parametro <fila>,<columna>");
                     return;
                 }
-                // Pasamos el objeto tablero (que es necesario para el método no estático)
                 handleWhat(tablero, args[4]);
+                break;
+
+            // --- NUEVOS CASOS TAREA 2 ---
+            case "--goal":
+                // No requiere más argumentos
+                boolean esMeta = tablero.isGoal();
+                System.out.println(esMeta ? "TRUE" : "FALSE"); // Salida como en el ejemplo [cite: 450]
+                break;
+
+            case "--move":
+                if (args.length < 5) {
+                    System.out.println("Error: Faltan las acciones <accion1,...>");
+                    return;
+                }
+                String[] acciones = args[4].split(",");
+                Tablero estadoActual = tablero;
+                
+                // Aplica cada acción de forma consecutiva 
+                for (String accion : acciones) {
+                    estadoActual = estadoActual.applyMove(accion);
+                }
+                
+                // Imprime el estado final
+                System.out.println(estadoActual.levelToString());
                 break;
 
             default:
@@ -120,7 +181,8 @@ public class Rushhour {
     }
 
     /**
-     * QUE: Procesa la opción '--what' que consulta qué vehículo hay en una posición.
+     * QUE: Procesa la opción '--what' que consulta qué vehículo hay en una
+     * posición.
      * POR QUE: Separar la lógica de parsing de coordenadas y manejo de errores.
      */
     private static void handleWhat(Tablero tablero, String position) {
@@ -134,8 +196,6 @@ public class Rushhour {
             int row = Integer.parseInt(parts[0].trim());
             int col = Integer.parseInt(parts[1].trim());
 
-            // --- REFACTORIZADO ---
-            // Llama al método de instancia de tablero
             String result = tablero.getVehicleAt(row, col);
             System.out.println(result);
 
