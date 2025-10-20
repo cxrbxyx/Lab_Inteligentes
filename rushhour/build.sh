@@ -1,7 +1,7 @@
 #!/bin/bash
 
 JAR_NAME="rushhour.jar"
-MAIN_CLASS="Rushhour"
+MAIN_CLASS="main.Rushhour"
 
 rm -rf out
 mkdir out

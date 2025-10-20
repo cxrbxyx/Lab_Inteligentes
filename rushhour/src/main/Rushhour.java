@@ -1,4 +1,5 @@
 package main;
+
 public class Rushhour {
 
     /**
@@ -78,11 +79,15 @@ public class Rushhour {
                     System.out.println("Error: Falta el parametro <vehiculo>");
                     return;
                 }
-                System.out.println(Tablero.getVehiclePositionsFormatted(tablero, args[4].charAt(0)));
+                // --- REFACTORIZADO ---
+                // Llama al método de instancia de tablero
+                System.out.println(tablero.getVehiclePositionsFormatted(args[4].charAt(0)));
                 break;
 
             case "--howmany":
-                System.out.println(Tablero.countVehicles(tablero));
+                // --- REFACTORIZADO ---
+                // Llama al método de instancia de tablero
+                System.out.println(tablero.countVehicles());
                 break;
 
             case "--size":
@@ -90,7 +95,9 @@ public class Rushhour {
                     System.out.println("Error: Falta el parametro <vehiculo>");
                     return;
                 }
-                int size = Tablero.getVehicleSize(tablero, args[4].charAt(0));
+                // --- REFACTORIZADO ---
+                // Llama al método de instancia de tablero
+                int size = tablero.getVehicleSize(args[4].charAt(0));
                 if (size == 0) {
                     System.out.println("Vehiculo '" + args[4].charAt(0) + "' no encontrado");
                 } else {
@@ -103,6 +110,7 @@ public class Rushhour {
                     System.out.println("Error: Falta el parametro <fila>,<columna>");
                     return;
                 }
+                // Pasamos el objeto tablero (que es necesario para el método no estático)
                 handleWhat(tablero, args[4]);
                 break;
 
@@ -126,12 +134,13 @@ public class Rushhour {
             int row = Integer.parseInt(parts[0].trim());
             int col = Integer.parseInt(parts[1].trim());
 
-            String result = Tablero.getVehicleAt(tablero, row, col);
+            // --- REFACTORIZADO ---
+            // Llama al método de instancia de tablero
+            String result = tablero.getVehicleAt(row, col);
             System.out.println(result);
 
         } catch (NumberFormatException e) {
             System.out.println("Error: Las coordenadas deben ser numeros");
         }
     }
-
 }

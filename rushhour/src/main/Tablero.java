@@ -1,13 +1,23 @@
 package main;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class Tablero {
     private char[][] casillas;
+    private ArrayList<Vehiculo> vehiculos; // ¡NUEVO!
 
+    /**
+     * QUE: Construye un Tablero a partir de su matriz de casillas.
+     * POR QUE: Es la representación principal del estado del juego.
+     */
     public Tablero(char[][] casillas) {
         this.casillas = casillas;
+        this.vehiculos = new ArrayList<>(); // Inicializa la lista
     }
 
+    // --- Getters y Setters ---
+    
     public char[][] getCasillas() {
         return casillas;
     }
@@ -15,11 +25,35 @@ public class Tablero {
     public void setCasillas(char[][] casillas) {
         this.casillas = casillas;
     }
+    
+    public ArrayList<Vehiculo> getVehiculos() {
+        return vehiculos;
+    }
+
+    public void setVehiculos(ArrayList<Vehiculo> vehiculos) {
+        this.vehiculos = vehiculos;
+    }
+    
+    /**
+     * QUE: Busca y devuelve un objeto Vehiculo basado en su ID.
+     * POR QUE: Método de ayuda para acceder rápidamente a un vehículo
+     * concreto desde la lista de vehículos del tablero.
+     */
+    private Vehiculo getVehiculoById(char id) {
+        for (Vehiculo v : this.vehiculos) {
+            if (v.getID() == id) {
+                return v;
+            }
+        }
+        return null;
+    }
+
 
     /**
-     * QUE: Convierte un nivel válido en un objeto Tablero con matriz 6x6.
-     * POR QUE: Transformar el string lineal en una estructura bidimensional
-     *          más fácil de manipular para el juego.
+     * QUE: Convierte un nivel válido en un objeto Tablero (matriz 6x6)
+     * y lo puebla con objetos Vehiculo.
+     * POR QUE: Transforma el string lineal en una estructura de objetos
+     * fácil de manipular para el juego y las consultas.
      */
     public static Tablero create_tablero(Nivel nivel) {
         char[] auxCasillas = Nivel.getArrayLevel();
@@ -34,13 +68,32 @@ public class Tablero {
             System.out.println("Nivel no valido");
             return null;
         }
+        
         Tablero tablero = new Tablero(casillas);
+        
+        // --- LÓGICA AÑADIDA PARA CREAR VEHÍCULOS ---
+        HashSet<Character> idsEncontrados = new HashSet<>();
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                char id = casillas[i][j];
+                if (id != 'o' && !idsEncontrados.contains(id)) {
+                    // Si es un vehículo y no lo hemos creado ya
+                    ArrayList<Integer[]> coords = whereIsAVehicle(tablero, id);
+                    Vehiculo v = new Vehiculo(id, coords);
+                    tablero.getVehiculos().add(v);
+                    idsEncontrados.add(id);
+                }
+            }
+        }
+        // ---------------------------------------------
+        
         return tablero;
     }
 
     /**
      * QUE: Encuentra todas las posiciones (fila, columna) de un vehículo específico.
-     * POR QUE: Necesario para mostrar dónde está ubicado un vehículo en el tablero.
+     * POR QUE: Necesario para crear el objeto Vehiculo durante la inicialización
+     * del tablero.
      */
     public static ArrayList<Integer[]> whereIsAVehicle(Tablero tablero, char vehicle) {
         ArrayList<Integer[]> positions = new ArrayList<>();
@@ -56,63 +109,48 @@ public class Tablero {
 
     /**
      * QUE: Devuelve las posiciones de un vehículo en formato "(fila,col)(fila,col)".
-     * POR QUE: Proporcionar una representación legible de las coordenadas para el usuario.
+     * POR QUE: Proporcionar una representación legible (requerido por T1 --whereis).
+     * Ahora delega la lógica de formato al objeto Vehiculo.
      */
-    public static String getVehiclePositionsFormatted(Tablero tablero, char vehicle) {
-        ArrayList<Integer[]> positions = whereIsAVehicle(tablero, vehicle);
-        if (positions.isEmpty()) {
+    public String getVehiclePositionsFormatted(char vehicle) {
+        Vehiculo v = getVehiculoById(vehicle);
+        if (v == null) {
             return "Vehiculo '" + vehicle + "' no encontrado";
         }
-        StringBuilder result = new StringBuilder();
-        for (Integer[] pos : positions) {
-            result.append("(").append(pos[0]).append(",").append(pos[1]).append(")");
-        }
-        return result.toString();
+        return v.getCoordsFormatted();
     }
 
     /**
-     * QUE: Cuenta cuántas casillas ocupa un vehículo específico.
-     * POR QUE: Determinar si es un coche o un camión.
+     * QUE: Devuelve el tamaño (casillas que ocupa) de un vehículo específico.
+     * POR QUE: Determinar si es un coche o un camión (requerido por T1 --size).
+     * Ahora obtiene esta información directamente del objeto Vehiculo.
      */
-    public static int getVehicleSize(Tablero tablero, char vehicle) {
-        int count = 0;
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-                if (tablero.casillas[i][j] == vehicle) {
-                    count++;
-                }
-            }
+    public int getVehicleSize(char vehicle) {
+        Vehiculo v = getVehiculoById(vehicle);
+        if (v == null) {
+            return 0; // Vehículo no encontrado
         }
-        return count;
+        return v.getSize();
     }
 
     /**
      * QUE: Devuelve qué vehículo está en una posición específica del tablero.
-     * POR QUE: Consultar el contenido de una casilla concreta por coordenadas.
+     * POR QUE: Consultar el contenido de una casilla (requerido por T1 --what).
      */
-    public static String getVehicleAt(Tablero tablero, int row, int col) {
+    public String getVehicleAt(int row, int col) {
         if (row < 0 || row > 5 || col < 0 || col > 5) {
             return "Error: Posicion fuera de rango (0-5)";
         }
-        char vehicle = tablero.getCasillas()[row][col];
+        char vehicle = this.getCasillas()[row][col];
         return String.valueOf(vehicle);
     }
 
     /**
      * QUE: Cuenta el número total de vehículos diferentes en el tablero.
-     * POR QUE: Proporcionar estadísticas del nivel.
+     * POR QUE: Proporcionar estadísticas del nivel (requerido por T1 --howmany).
+     * Ahora solo consulta el tamaño de la lista de vehículos.
      */
-    public static int countVehicles(Tablero tablero) {
-        String vehicles = "";
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-                char c = tablero.casillas[i][j];
-                if (c != 'o' && !vehicles.contains(String.valueOf(c))) {
-                    vehicles += c;
-                }
-            }
-        }
-        return vehicles.length();
+    public int countVehicles() {
+        return this.vehiculos.size();
     }
-
 }
