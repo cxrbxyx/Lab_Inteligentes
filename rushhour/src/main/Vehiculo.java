@@ -7,7 +7,6 @@ public class Vehiculo {
     private char ID;
     private int size;
     private ArrayList<Integer[]> coords;
-    private boolean horizontal;
 
     /**
      * QUE: Construye un objeto Vehiculo.
@@ -18,34 +17,24 @@ public class Vehiculo {
         this.ID = ID;
         this.coords = coords;
         this.size = this.coords.size();
-        this.horizontal = isHorizontal();
     }
 
     /**
      * QUE: Comprueba si el vehículo está orientado horizontalmente.
      * POR QUE: Determina el eje de movimiento del vehículo (horizontal o vertical).
-     * Es crucial para calcular movimientos válidos.
      */
     public boolean isHorizontal() {
-        // Si hay menos de 2 coordenadas, no se puede determinar (aunque T1 valida esto)
         if (this.coords == null || this.coords.size() < 2) {
-            // Por defecto, para un vehículo de tamaño 1 (si se permitiera),
-            // no se podría mover, pero T1 los filtra.
-            // Asumimos horizontal para el coche 'A' si algo falla,
-            // aunque la validación de Nivel ya lo comprueba.
             return true;
         }
-        // Comparamos la fila (índice 0) de las primeras dos coordenadas.
-        // Si son iguales, es horizontal.
         Integer[] coord1 = this.coords.get(0);
         Integer[] coord2 = this.coords.get(1);
-        
         return coord1[0].equals(coord2[0]);
     }
-    
+
     /**
      * QUE: Devuelve las posiciones del vehículo en formato "(fila,col)(fila,col)".
-     * [cite_start]POR QUE: Para cumplir con el formato de salida de la Tarea 1 (--whereis)[cite: 214].
+     * POR QUE: Para cumplir con el formato de salida de la Tarea 1 (--whereis).
      */
     public String getCoordsFormatted() {
         StringBuilder result = new StringBuilder();
@@ -55,11 +44,9 @@ public class Vehiculo {
         return result.toString();
     }
 
-    // --- Getters y Setters ---
-
     /**
      * QUE: Obtiene el ID (letra) del vehículo.
-     * POR QUE: Para identificar unívocamente el vehículo.
+     * POR QUE: Para identificar el vehículo.
      */
     public char getID() {
         return ID;
@@ -93,7 +80,4 @@ public class Vehiculo {
         this.coords = coords;
     }
 
-    public void setHorizontal(boolean horizontal) {
-        this.horizontal = horizontal;
-    }
 }

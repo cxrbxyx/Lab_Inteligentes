@@ -17,28 +17,24 @@ public class Sucesor {
         this.costo = costo;
     }
 
-    public String getAccion() {
+    public String getAction() {
         return accion;
     }
 
-    public Tablero getNuevoEstado() {
+    public Tablero getNewState() {
         return nuevoEstado;
     }
 
-    public int getCosto() {
+    public int getCost() {
         return costo;
     }
 
     /**
      * QUE: Devuelve la representación en String del sucesor.
-     * POR QUE: Para cumplir con el formato de salida exacto 
-     * [accion,estado_string,costo]
-     * requerido por la Tarea 2[cite: 439].
+     * POR QUE: Para cumplir con el formato de salida exacto
      */
     @Override
     public String toString() {
-        // Llama a levelToString() del nuevo tablero para obtener el string de 36
-        // caracteres
         return "[" + this.accion + "," + this.nuevoEstado.levelToString() + "," + this.costo + "]";
     }
 }

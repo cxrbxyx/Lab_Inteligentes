@@ -3,7 +3,6 @@ package main;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 
 public class Tablero {
     private char[][] casillas;
@@ -18,7 +17,6 @@ public class Tablero {
         this.vehiculos = new ArrayList<>(); // Inicializa la lista
     }
 
-    // --- Getters y Setters (Sin cambios) ---
     public char[][] getCasillas() {
         return casillas;
     }
@@ -51,9 +49,8 @@ public class Tablero {
 
     /**
      * QUE: Convierte un nivel válido en un objeto Tablero (matriz 6x6)
-     * y lo puebla con objetos Vehiculo.
      * POR QUE: Transforma el string lineal en una estructura de objetos
-     * fácil de manipular para el juego y las consultas.
+     * para el juego y las consultas.
      */
     public static Tablero create_tablero(Nivel nivel) {
         char[] auxCasillas = Nivel.getArrayLevel();
@@ -70,8 +67,20 @@ public class Tablero {
         }
 
         Tablero tablero = new Tablero(casillas);
-        tablero.poblarVehiculos(); // Lógica de escaneo extraída a un método
+        tablero.poblarVehiculos();
         return tablero;
+    }
+
+    /**
+     * QUE: Comprueba si un vehículo está almacenado en la lista de Vehículos.
+     * POR QUE: Para comprobar que no se dupliquen vehículos al escanear el tablero.
+     */
+    private boolean idYaExiste(char id) {
+        for (Vehiculo v : this.vehiculos) {
+            if (v.getID() == id)
+                return true;
+        }
+        return false;
     }
 
     /**
@@ -81,15 +90,13 @@ public class Tablero {
      */
     private void poblarVehiculos() {
         this.vehiculos.clear();
-        HashSet<Character> idsEncontrados = new HashSet<>();
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
                 char id = this.casillas[i][j];
-                if (id != 'o' && !idsEncontrados.contains(id)) {
+                if (id != 'o' && !idYaExiste(id)) {
                     ArrayList<Integer[]> coords = this.findVehicleCoords(id);
                     Vehiculo v = new Vehiculo(id, coords);
                     this.getVehiculos().add(v);
-                    idsEncontrados.add(id);
                 }
             }
         }
@@ -112,8 +119,6 @@ public class Tablero {
         }
         return positions;
     }
-
-    // --- MÉTODOS TAREA 1 (Refactorizados a no-estáticos) ---
 
     public String getVehiclePositionsFormatted(char vehicle) {
         Vehiculo v = getVehiculoById(vehicle);
@@ -143,12 +148,9 @@ public class Tablero {
         return this.vehiculos.size();
     }
 
-    // --- ¡NUEVOS MÉTODOS TAREA 2! ---
-
     /**
      * QUE: Convierte el estado actual del tablero a un string de 36 caracteres.
      * POR QUE: Necesario para la salida de los comandos 'successors' y 'move'
-     *[cite: 439, 451].
      */
     public String levelToString() {
         StringBuilder sb = new StringBuilder(36);
@@ -168,8 +170,6 @@ public class Tablero {
         Vehiculo cocheA = getVehiculoById('A');
         if (cocheA == null)
             return false;
-        
-        // El objetivo es que 'A' alcance la casilla (2,5) [cite: 430, 431]
         for (Integer[] coord : cocheA.getCoords()) {
             if (coord[0] == 2 && coord[1] == 5) {
                 return true;
@@ -184,8 +184,6 @@ public class Tablero {
      */
     public ArrayList<Sucesor> getSuccessors() {
         ArrayList<Sucesor> sucesores = new ArrayList<>();
-        
-        // Regla 1: Ordenar vehículos alfabéticamente [cite: 418]
         Collections.sort(this.vehiculos, new Comparator<Vehiculo>() {
             @Override
             public int compare(Vehiculo v1, Vehiculo v2) {
@@ -194,10 +192,10 @@ public class Tablero {
         });
 
         for (Vehiculo v : this.vehiculos) {
-            // Regla 2: Primero movimientos '+' (derecha/abajo) [cite: 419]
-            findMoves(v, sucesores, true); // true para '+'
-            // Regla 2: Luego movimientos '-' (izquierda/arriba) [cite: 419]
-            findMoves(v, sucesores, false); // false para '-'
+
+            findMoves(v, sucesores, true);
+
+            findMoves(v, sucesores, false);
         }
 
         return sucesores;
@@ -213,22 +211,20 @@ public class Tablero {
         int dr = 0, dc = 0;
 
         if (v.isHorizontal()) {
-            dc = positiveDir ? 1 : -1; // Derecha (+) o Izquierda (-)
+            dc = positiveDir ? 1 : -1;
         } else {
-            // INVERSIÓN: '+' será hacia ARRIBA (-1), '-' será hacia ABAJO (+1)
             dr = positiveDir ? -1 : 1;
         }
 
-        // Regla 3: Orden creciente de casillas (1, 2, 3...) [cite: 420]
         for (int dist = 1; dist <= 5; dist++) {
             if (canMove(v, dr * dist, dc * dist)) {
-                // Es un movimiento válido
+
                 String accion = "" + v.getID() + dirChar + dist;
-                int costo = 6 - dist; // Costo = 6 - casillas movidas [cite: 411]
+                int costo = 6 - dist;
                 Tablero nuevoEstado = applyMove(v, dr * dist, dc * dist);
                 sucesores.add(new Sucesor(accion, nuevoEstado, costo));
             } else {
-                // Si no puede moverse 'dist', tampoco podrá 'dist+1'
+
                 break;
             }
         }
@@ -239,28 +235,26 @@ public class Tablero {
      * POR QUE: Para saber si la casilla destino está libre y dentro del tablero.
      */
     private boolean canMove(Vehiculo v, int dr, int dc) {
-        // Solo necesitamos comprobar la "punta" del vehículo en la dirección
-        // del movimiento.
+
         ArrayList<Integer[]> coords = v.getCoords();
         Integer[] coordToCheck;
 
         if (dr > 0)
-            coordToCheck = coords.get(coords.size() - 1); // Abajo
+            coordToCheck = coords.get(coords.size() - 1);
         else if (dr < 0)
-            coordToCheck = coords.get(0); // Arriba
+            coordToCheck = coords.get(0);
         else if (dc > 0)
-            coordToCheck = coords.get(coords.size() - 1); // Derecha
+            coordToCheck = coords.get(coords.size() - 1);
         else
-            coordToCheck = coords.get(0); // Izquierda
+            coordToCheck = coords.get(0);
 
         int newRow = coordToCheck[0] + dr;
         int newCol = coordToCheck[1] + dc;
 
-        // 1. Comprobar límites del tablero
         if (newRow < 0 || newRow > 5 || newCol < 0 || newCol > 5) {
             return false;
         }
-        // 2. Comprobar si la casilla está vacía
+
         return this.casillas[newRow][newCol] == 'o';
     }
 
@@ -270,25 +264,22 @@ public class Tablero {
      * '--move'.
      */
     private Tablero applyMove(Vehiculo v, int dr, int dc) {
-        // 1. Crear una copia profunda de las casillas
+
         char[][] nuevasCasillas = new char[6][6];
         for (int i = 0; i < 6; i++) {
             nuevasCasillas[i] = this.casillas[i].clone();
         }
 
-        // 2. Borrar el vehículo de su posición antigua en las nuevas casillas
         for (Integer[] coord : v.getCoords()) {
             nuevasCasillas[coord[0]][coord[1]] = 'o';
         }
 
-        // 3. Dibujar el vehículo en su posición nueva
         for (Integer[] coord : v.getCoords()) {
             nuevasCasillas[coord[0] + dr][coord[1] + dc] = v.getID();
         }
 
-        // 4. Crear un nuevo objeto Tablero y poblar sus vehículos
         Tablero nuevoTablero = new Tablero(nuevasCasillas);
-        nuevoTablero.poblarVehiculos(); // Re-escanear para crear nuevos objetos Vehiculo
+        nuevoTablero.poblarVehiculos();
 
         return nuevoTablero;
     }
@@ -305,7 +296,7 @@ public class Tablero {
         Vehiculo v = getVehiculoById(id);
         if (v == null) {
             System.out.println("Error: Vehículo '" + id + "' no encontrado en --move.");
-            return this; // Devuelve el estado actual si hay error
+            return this;
         }
 
         int dr = 0;
@@ -314,29 +305,27 @@ public class Tablero {
         if (v.isHorizontal()) {
             dc = (dir == '+') ? dist : -dist;
         } else {
-            dr = (dir == '+') ? dist : -dist;
+            dr = (dir == '+') ? -dist : dist;
         }
 
-        // Comprobación simple (no comprueba todos los pasos intermedios,
-        // pero T2 asume acciones válidas)
         if (canMove(v, (dir == '+') ? dr : dr * dist, (dir == '+') ? dc : dc * dist)) {
-             return applyMove(v, dr, dc);
+            return applyMove(v, dr, dc);
         } else {
-            // Chequeo más robusto por si el 'canMove' simple falla (ej. A+2)
-             Tablero estadoIntermedio = this;
-             int dr_step = (dr == 0) ? 0 : (dr > 0 ? 1 : -1);
-             int dc_step = (dc == 0) ? 0 : (dc > 0 ? 1 : -1);
-             
-             for(int i=0; i<dist; i++) {
-                 Vehiculo v_actual = estadoIntermedio.getVehiculoById(id);
-                 if (estadoIntermedio.canMove(v_actual, dr_step, dc_step)) {
-                     estadoIntermedio = estadoIntermedio.applyMove(v_actual, dr_step, dc_step);
-                 } else {
-                     System.out.println("Error: Movimiento '" + accion + "' es inválido.");
-                     return this; // Devuelve estado original
-                 }
-             }
-             return estadoIntermedio;
+
+            Tablero estadoIntermedio = this;
+            int dr_step = (dr == 0) ? 0 : (dr > 0 ? 1 : -1);
+            int dc_step = (dc == 0) ? 0 : (dc > 0 ? 1 : -1);
+
+            for (int i = 0; i < dist; i++) {
+                Vehiculo v_actual = estadoIntermedio.getVehiculoById(id);
+                if (estadoIntermedio.canMove(v_actual, dr_step, dc_step)) {
+                    estadoIntermedio = estadoIntermedio.applyMove(v_actual, dr_step, dc_step);
+                } else {
+                    System.out.println("Error: Movimiento '" + accion + "' es inválido.");
+                    return this;
+                }
+            }
+            return estadoIntermedio;
         }
     }
 }

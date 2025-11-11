@@ -1,12 +1,13 @@
 package main;
 
-import java.util.ArrayList; // Necesario para getSuccessors
+import java.util.ArrayList;
 
 public class Rushhour {
 
     /**
      * QUE: Punto de entrada principal que procesa argumentos de línea de comandos.
-     * POR QUE: Permitir ejecutar el programa desde terminal con diferentes comandos.
+     * POR QUE: Permitir ejecutar el programa desde terminal con diferentes
+     * comandos.
      */
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -22,7 +23,6 @@ public class Rushhour {
             case "question":
                 handleQuestion(args);
                 break;
-            // --- NUEVO CASO TAREA 2 ---
             case "successors":
                 handleSuccessors(args);
                 break;
@@ -73,7 +73,6 @@ public class Rushhour {
             return;
         }
 
-        // Generar y mostrar sucesores
         ArrayList<Sucesor> sucesores = tablero.getSuccessors();
         for (Sucesor suc : sucesores) {
             System.out.println(suc.toString());
@@ -85,7 +84,7 @@ public class Rushhour {
      * POR QUE: Proporcionar una interfaz de consultas sobre el estado del juego.
      */
     private static void handleQuestion(String[] args) {
-        // --- TEXTO DE AYUDA ACTUALIZADO ---
+
         if (args.length < 4 || !args[1].equals("-s")) {
             System.out.println("Uso: java -jar rushhour.jar question -s <nivel> <opcion> [parametro]");
             System.out.println("Opciones T1:");
@@ -117,7 +116,6 @@ public class Rushhour {
         String option = args[3];
 
         switch (option) {
-            // --- CASOS T1 (Sin cambios) ---
             case "--whereis":
                 if (args.length < 5) {
                     System.out.println("Error: Falta el parametro <vehiculo>");
@@ -151,11 +149,10 @@ public class Rushhour {
                 handleWhat(tablero, args[4]);
                 break;
 
-            // --- NUEVOS CASOS TAREA 2 ---
             case "--goal":
-                // No requiere más argumentos
+
                 boolean esMeta = tablero.isGoal();
-                System.out.println(esMeta ? "TRUE" : "FALSE"); // Salida como en el ejemplo [cite: 450]
+                System.out.println(esMeta ? "TRUE" : "FALSE");
                 break;
 
             case "--move":
@@ -165,13 +162,11 @@ public class Rushhour {
                 }
                 String[] acciones = args[4].split(",");
                 Tablero estadoActual = tablero;
-                
-                // Aplica cada acción de forma consecutiva 
+
                 for (String accion : acciones) {
                     estadoActual = estadoActual.applyMove(accion);
                 }
-                
-                // Imprime el estado final
+
                 System.out.println(estadoActual.levelToString());
                 break;
 

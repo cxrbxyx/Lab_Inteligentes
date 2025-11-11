@@ -1,4 +1,5 @@
 package main;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,7 +31,7 @@ public class Nivel {
      * POR QUE: Asegurar que el nivel sea jugable antes de crear el tablero.
      */
     public static int verify_level(char[] casillas) {
-        
+
         String[] vehicles = searchVehicles(casillas);
 
         if (!isLevelValid(level)) {
@@ -90,7 +91,8 @@ public class Nivel {
 
     /**
      * QUE: Verifica que el nivel solo contenga letras mayúsculas y 'o'.
-     * POR QUE: Los vehículos se representan con letras y las casillas vacías con 'o'.
+     * POR QUE: Los vehículos se representan con letras y las casillas vacías con
+     * 'o'.
      */
     private static boolean hasValidCharacters(String level) {
         String regex = "^[A-Zo]+$";
